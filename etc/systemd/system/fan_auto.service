@@ -1,0 +1,6 @@
+[Unit]
+Description=Run fan_auto
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sudo /usr/local/bin/fan_auto

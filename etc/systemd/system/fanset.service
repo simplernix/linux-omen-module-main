@@ -1,0 +1,11 @@
+[Unit]
+Description=HP Omen fan setup (root)
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fanset.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

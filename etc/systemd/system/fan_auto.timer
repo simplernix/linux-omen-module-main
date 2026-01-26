@@ -1,0 +1,11 @@
+[Unit]
+Description=Run fan_auto every 5 seconds
+
+[Timer]
+OnBootSec=5
+OnUnitActiveSec=5
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,80 @@
+#!/bin/python3
+
+import subprocess
+import time
+
+
+def omen_fan_speed(temp):
+    """
+    Fan curve scaled to output between 20% (minimum) and 65% (maximum).
+    Active range: 30°C → 70°C
+    """
+    MIN_FAN = 20
+    MAX_FAN = 65
+
+    # Below 30°C → fan off
+    if temp < 30:
+        return 0
+
+    # At 70°C or above → cap at max
+    if temp >= 70:
+        return MAX_FAN
+
+    # 1. 30–40°C: light ramp (20 → 30)
+    if 30 <= temp < 40:
+        return int(
+            MIN_FAN + (temp - 30) * (30 - MIN_FAN) / (40 - 30)
+        )
+
+    # 2. 40–55°C: medium ramp (30 → 45)
+    if 40 <= temp < 55:
+        return int(
+            30 + (temp - 40) * (45 - 30) / (55 - 40)
+        )
+
+    # 3. 55–65°C: steep ramp (45 → 60)
+    if 55 <= temp < 65:
+        return int(
+            45 + (temp - 55) * (60 - 45) / (65 - 55)
+        )
+
+    # 4. 65–70°C: final push (60 → 65)
+    return int(
+        60 + (temp - 65) * (MAX_FAN - 60) / (70 - 65)
+    )
+
+
+def round_to_prev_five(value):
+    return ((value // 5) * 5) + 5
+
+
+# AC status
+with open('/sys/class/power_supply/ACAD/online', 'r') as f:
+    status = int(f.read(1))
+
+
+def read_temp():
+    with open('/sys/devices/virtual/thermal/thermal_zone0/temp', 'r') as f:
+        return int(f.read().strip())
+
+
+# Read temperature correctly (raw in millidegrees)
+t1 = read_temp()
+time.sleep(0.5)
+t2 = read_temp()
+
+raw_temp = (t1 + t2) / 2
+actual_temp = raw_temp // 1000  # correct conversion
+
+
+# Compute fan speed
+fan_value = omen_fan_speed(actual_temp)
+# fan_value = round_to_prev_five(fan_value)
+
+print(f"AC:{status} Temp:{actual_temp}°C Fan:{fan_value}")
+
+# Call external fan controller
+if fan_value == 0:
+    subprocess.run(['/usr/local/bin/fan_max', '0'])
+else:
+    subprocess.run(['/usr/local/bin/fan_speed', str(fan_value)])
