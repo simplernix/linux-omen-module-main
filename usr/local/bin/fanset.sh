@@ -22,7 +22,11 @@ fi
 insmod hp-wmi.ko
 
 echo "[*] Copying binaries to /usr/local/bin..."
-cp -v usr/local/bin/* /usr/local/bin/
+for f in usr/local/bin/*; do
+  [ "$(basename "$f")" = "fanset.sh" ] && continue
+  cp -v "$f" /usr/local/bin/
+done
+
 
 echo "[*] Installing systemd service and timer files..."
 cp -v etc/systemd/system/* /etc/systemd/system/
@@ -31,11 +35,11 @@ echo "[*] Installing udev rules..."
 cp -v etc/udev/rules.d/* /etc/udev/rules.d/
 
 echo "[*] Reloading systemd manager configuration..."
-systemctl daemon-reexec
-systemctl daemon-reload
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
 
 echo "[*] Enabling and starting services..."
-sudo systemctl daemon-reload
+
 sudo systemctl enable --now fan_auto.service
 sudo systemctl enable --now fan_auto.timer
 

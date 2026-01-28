@@ -1,9 +1,9 @@
 [Unit]
-Description=Run fan_auto every 5 seconds
+Description=Run fan_auto every 2 seconds
 
 [Timer]
-OnBootSec=5
-OnUnitActiveSec=5
+OnBootSec=2
+OnUnitActiveSec=2
 AccuracySec=1s
 Persistent=true
 

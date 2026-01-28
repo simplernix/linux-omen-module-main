@@ -8,8 +8,10 @@ fi
 fan_control=$1
 
 if [ "$fan_control" -eq 1 ]; then
+	sudo systemctl stop fan_auto.timer
 	sudo echo 0 | sudo tee /sys/devices/platform/hp-wmi/hwmon/hwmon*/pwm1_enable > /dev/null
 elif [ "$fan_control" -eq 0 ]; then
+	sudo systemctl restart fan_auto.timer
 	sudo echo 2 | sudo tee /sys/devices/platform/hp-wmi/hwmon/hwmon*/pwm1_enable > /dev/null
 else
     echo "Invalid input. Please use 1 for max fan speed or 0 for minimum speed."

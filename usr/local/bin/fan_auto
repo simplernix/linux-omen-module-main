@@ -4,48 +4,45 @@ import subprocess
 import time
 
 
-def omen_fan_speed(temp):
+def omen_fan_speed(temp: float) -> int:
     """
-    Fan curve scaled to output between 20% (minimum) and 65% (maximum).
-    Active range: 30°C → 70°C
-    """
-    MIN_FAN = 20
-    MAX_FAN = 65
+    Fan curve with 5°C segments.
+    Output range: 0–65%
 
-    # Below 30°C → fan off
+    30–35 : 20 → 25
+    35–40 : 25 → 30
+    40–45 : 30 → 35
+    45–50 : 35 → 40
+    50–55 : 40 → 45
+    55–60 : 45 → 52
+    60–65 : 52 → 60
+    65–70 : 60 → 65
+    """
+
     if temp < 30:
         return 0
-
-    # At 70°C or above → cap at max
     if temp >= 70:
-        return MAX_FAN
+        return 65
 
-    # 1. 30–40°C: light ramp (20 → 30)
-    if 30 <= temp < 40:
-        return int(
-            MIN_FAN + (temp - 30) * (30 - MIN_FAN) / (40 - 30)
-        )
+    # (low, high, fan_start, fan_end)
+    segments = [
+        (30, 35, 20, 25),
+        (35, 40, 25, 30),
+        (40, 45, 30, 35),
+        (45, 50, 35, 40),
+        (50, 55, 40, 45),
+        (55, 60, 45, 52),
+        (60, 65, 52, 60),
+        (65, 70, 60, 65),
+    ]
 
-    # 2. 40–55°C: medium ramp (30 → 45)
-    if 40 <= temp < 55:
-        return int(
-            30 + (temp - 40) * (45 - 30) / (55 - 40)
-        )
-
-    # 3. 55–65°C: steep ramp (45 → 60)
-    if 55 <= temp < 65:
-        return int(
-            45 + (temp - 55) * (60 - 45) / (65 - 55)
-        )
-
-    # 4. 65–70°C: final push (60 → 65)
-    return int(
-        60 + (temp - 65) * (MAX_FAN - 60) / (70 - 65)
-    )
+    for t0, t1, f0, f1 in segments:
+        if t0 <= temp < t1:
+            return round(f0 + (temp - t0) * (f1 - f0) / (t1 - t0))
 
 
 def round_to_prev_five(value):
-    return ((value // 5) * 5) + 5
+    return ((value // 5) * 5) - 5
 
 
 # AC status
