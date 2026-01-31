@@ -1,0 +1,37 @@
+#!/bin/bash
+sudo systemctl stop fan_auto.timer
+# Check if argument is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <decimal_value>  (e.g., $0 62)"
+    echo "Error: No fan value provided"
+    exit 1
+fi
+
+decimal_value="$1"
+
+# Strictly validate: must be a positive integer (decimal only)
+if ! [[ "$decimal_value" =~ ^[0-9]+$ ]]; then
+    echo "Error: '$decimal_value' is not a valid decimal number."
+    echo "Only decimal values are accepted (e.g., 62, 32, 0). Hex values like 3e or 0x3e are not allowed."
+    exit 1
+fi
+
+# Optional: add reasonable bounds for HP Omen fan values (0 to ~65)
+if [ "$decimal_value" -gt 65 ]; then
+    echo "Warning: Fan value $decimal_value is quite high (typical max is around 62)."
+fi
+
+# Convert decimal to hex with 0x prefix (some older guides expect this format)
+hex_value=$(printf "0x%02X" "$decimal_value")
+
+# Write to fancount
+
+echo "$hex_value" | tee /sys/devices/platform/hp-wmi/fancount > /dev/null
+
+# Optional: confirm success
+if [ $? -eq 0 ]; then
+    echo "Fan speed set to $decimal_value ($hex_value)"
+else
+    echo "Failed to set fan speed (permission or interface issue)"
+    exit 1
+fi

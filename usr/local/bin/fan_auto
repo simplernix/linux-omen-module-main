@@ -4,6 +4,7 @@ import subprocess
 import time
 
 
+
 def omen_fan_speed(temp: float) -> int:
     """
     Fan curve with 5°C segments.
@@ -75,3 +76,16 @@ if fan_value == 0:
     subprocess.run(['/usr/local/bin/fan_max', '0'])
 else:
     subprocess.run(['/usr/local/bin/fan_speed', str(fan_value)])
+    
+result = subprocess.run(
+    ["systemctl", "is-active", "fan_auto.timer"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    text=True
+)
+
+if result.stdout.strip() != "active":
+    subprocess.run(
+        ["systemctl", "start", "fan_auto.timer"],
+        check=True
+    )
